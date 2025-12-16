@@ -55,6 +55,13 @@ public class Dish {
     }
 
     public void setIngredients(List<Ingredient> ingredients) {
+        if (ingredients == null) {
+            this.ingredients = null;
+            return;
+        }
+        for (int i = 0; i < ingredients.size(); i++) {
+            ingredients.get(i).setDish(this);
+        }
         this.ingredients = ingredients;
     }
 
