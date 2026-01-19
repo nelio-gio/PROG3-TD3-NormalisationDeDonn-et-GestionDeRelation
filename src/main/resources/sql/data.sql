@@ -22,4 +22,3 @@ where id = 1;
 update dish
 set price = 6000.0
 where id = 2;
-

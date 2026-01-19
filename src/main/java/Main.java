@@ -1,19 +1,31 @@
+import java.util.List;
+
+// Point de départ pour tester, comme allumer la lumière pour voir si la maison marche.
 public class Main {
     public static void main(String[] args) {
-        // Log before changes
-        DataRetriever dataRetriever = new DataRetriever();
-        Dish dish = dataRetriever.findDishById(4
+        DataRetriever dr = new DataRetriever();
 
-        );
-        System.out.println(dish);
+        // Test find et cost/margin.
+        Dish salade = dr.findDishById(1);
+        System.out.println("Salade fraîche: " + salade);
+        System.out.println("Coût: " + salade.getDishCost());  // Devrait être 250.00
+        try {
+            System.out.println("Marge: " + salade.getGrossMargin());  // 3250.00
+        } catch (RuntimeException e) {
+            System.out.println("Erreur: " + e.getMessage());
+        }
 
-        // Log after changes
-//        dish.setIngredients(List.of(new Ingredient(1), new Ingredient(2)));
-//        Dish newDish = dataRetriever.saveDish(dish);
-//        System.out.println(newDish);
+        Dish riz = dr.findDishById(3);
+        System.out.println("Riz: " + riz);
+        System.out.println("Coût: " + riz.getDishCost());  // 0.00
+        try {
+            System.out.println("Marge: " + riz.getGrossMargin());  // Exception
+        } catch (RuntimeException e) {
+            System.out.println("Erreur attendue: " + e.getMessage());
+        }
 
-        // Ingredient creations
-        //List<Ingredient> createdIngredients = dataRetriever.createIngredients(List.of(new Ingredient(null, "Fromage", CategoryEnum.DAIRY, 1200.0)));
-        //System.out.println(createdIngredients);
+        // Test createIngredients (exemple).
+        List<Ingredient> created = dr.createIngredients(List.of(new Ingredient(null, "Fromage", CategoryEnum.DAIRY, 1200.0)));
+        System.out.println("Ingrédients créés: " + created);
     }
 }
