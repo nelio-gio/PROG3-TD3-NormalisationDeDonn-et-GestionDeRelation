@@ -1,3 +1,4 @@
+
 insert into dish (id, name, dish_type)
 values (1, 'Salaide fraîche', 'STARTER'),
        (2, 'Poulet grillé', 'MAIN'),
@@ -22,3 +23,34 @@ where id = 1;
 update dish
 set price = 6000.0
 where id = 2;
+
+
+
+
+-- Nettoyage préalable (optionnel)
+TRUNCATE TABLE dish_ingredient, ingredient, dish RESTART IDENTITY CASCADE;
+
+-- Insertion des ingrédients (un seul par type/nom)
+INSERT INTO ingredient (name, price, category) VALUES
+                                                   ('Laitue',      800.00, 'VEGETABLE'),
+                                                   ('Tomate',      600.00, 'VEGETABLE'),
+                                                   ('Poulet',     4500.00, 'ANIMAL'),
+                                                   ('Chocolat',   3000.00, 'OTHER'),
+                                                   ('Beurre',     2500.00, 'DAIRY');
+
+-- Insertion des plats avec selling_prices.
+INSERT INTO dish (name, dish_type, selling_price) VALUES
+                                                      ('Salade fraîche',      'STARTER',   3500.00),
+                                                      ('Poulet grillé',       'MAIN',     12000.00),
+                                                      ('Riz aux légumes',     'MAIN',     NULL),
+                                                      ('Gâteau au chocolat',  'DESSERT',   8000.00),
+                                                      ('Salade de fruits',    'DESSERT',   NULL);
+
+-- Insertion des liens ManyToMany avec quantités.
+INSERT INTO dish_ingredient (id_dish, id_ingredient, quantity_required, unit) VALUES
+                                                                                  (1, 1, 0.20, 'KG'),
+                                                                                  (1, 2, 0.15, 'KG'),
+                                                                                  (2, 3, 1.00, 'KG'),
+                                                                                  (4, 4, 0.30, 'KG'),
+                                                                                  (4, 5, 0.20, 'KG');
+
