@@ -75,7 +75,7 @@ public class DataRetriever {
         }
     }
 
-    // 3. saveDish (TD3) : utilise selling_price
+
     Dish saveDish(Dish toSave) {
         String upsertDishSql = """
                     INSERT INTO dish (id, selling_price, name, dish_type)
