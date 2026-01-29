@@ -8,6 +8,7 @@ public class Ingredient {
     private Double price;
     private Dish dish;
     private Double quantity;
+    private Double stock;  // ← Ajouté pour TD4 : niveau de stock actuel
 
     public Double getQuantity() {
         return quantity;
@@ -15,6 +16,14 @@ public class Ingredient {
 
     public void setQuantity(Double quantity) {
         this.quantity = quantity;
+    }
+
+    public Double getStock() {  // ← Getter ajouté
+        return stock;
+    }
+
+    public void setStock(Double stock) {  // ← Setter ajouté
+        this.stock = stock;
     }
 
     public Ingredient() {
@@ -29,6 +38,15 @@ public class Ingredient {
         this.name = name;
         this.category = category;
         this.price = price;
+    }
+
+    // Constructeur mis à jour avec stock (TD4)
+    public Ingredient(Integer id, String name, CategoryEnum category, Double price, Double stock) {
+        this.id = id;
+        this.name = name;
+        this.category = category;
+        this.price = price;
+        this.stock = stock;
     }
 
     public String getDishName() {
@@ -96,6 +114,8 @@ public class Ingredient {
                 ", price=" + price +
                 ", dishName=" + getDishName() +
                 ", quantity=" + quantity +
+                ", stock=" + stock +  // ← Ajouté dans toString
                 '}';
     }
 }
+

@@ -1,4 +1,3 @@
-
 insert into dish (id, name, dish_type)
 values (1, 'Salaide fraîche', 'STARTER'),
        (2, 'Poulet grillé', 'MAIN'),
@@ -54,3 +53,13 @@ INSERT INTO dish_ingredient (id_dish, id_ingredient, quantity_required, unit) VA
                                                                                   (4, 4, 0.30, 'KG'),
                                                                                   (4, 5, 0.20, 'KG');
 
+
+
+
+--Data du TD4
+-- Exemples de mouvements IN (achat) et OUT (vente)
+INSERT INTO stock_movement (id_ingredient, quantity, unit, movement_type)
+VALUES
+    (1, 5.00, 'KG', 'IN'),
+    (2, 3.00, 'KG', 'IN'),
+    (1, 0.20, 'KG', 'OUT');

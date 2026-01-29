@@ -35,3 +35,40 @@ COMMENT ON TABLE dish_ingredient IS 'Relation ManyToMany entre plats et ingrédi
 
 
 
+
+            --TD4
+ALTER TABLE ingredient
+    ADD COLUMN IF NOT EXISTS stock NUMERIC(10,2) DEFAULT 0;
+
+
+CREATE TYPE IF NOT EXISTS movement_type AS ENUM ('IN', 'OUT');
+
+
+CREATE TABLE IF NOT EXISTS stock_movement (
+                                              id SERIAL PRIMARY KEY,
+                                              id_ingredient INTEGER NOT NULL REFERENCES ingredient(id) ON DELETE CASCADE,
+    quantity NUMERIC(10,2) NOT NULL,
+    unit VARCHAR(20) NOT NULL,
+    movement_type movement_type NOT NULL,
+    creation_datetime TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+
+
+-- schema du sujet ANNEXE:
+CREATE TABLE IF NOT EXISTS "order" (
+                                       id SERIAL PRIMARY KEY,
+                                       reference VARCHAR(10) UNIQUE NOT NULL,  -- ex: ORD00001
+    creation_datetime TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    total_ht NUMERIC(10,2) NOT NULL DEFAULT 0,
+    total_ttc NUMERIC(10,2) NOT NULL DEFAULT 0
+    );
+
+CREATE TABLE IF NOT EXISTS dish_order (
+                                          id SERIAL PRIMARY KEY,
+                                          id_order INTEGER NOT NULL REFERENCES "order"(id) ON DELETE CASCADE,
+    id_dish INTEGER NOT NULL REFERENCES dish(id) ON DELETE RESTRICT,
+    quantity INTEGER NOT NULL CHECK (quantity > 0)
+    );
+
+CREATE INDEX IF NOT EXISTS idx_dish_order_id_order ON dish_order(id_order);
