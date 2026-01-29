@@ -299,15 +299,30 @@ public class DataRetriever {
             throw new IllegalArgumentException("La commande doit contenir au moins un plat");
         }
 
-        // Validation du format de référence (exigence annexe)
+        // Validation format référence
         if (orderToSave.getReference() == null || !orderToSave.getReference().matches("^ORD\\d{5}$")) {
             throw new IllegalArgumentException("Référence invalide. Format attendu : ORDXXXXX (ex. ORD00001)");
+        }
+
+        // Vérification status : on ne modifie pas une commande livrée
+        if (orderToSave.getOrderStatus() == OrderStatusEnum.DELIVERED) {
+            throw new IllegalStateException("Une commande livrée (DELIVERED) ne peut plus être modifiée");
+        }
+
+        // Status par défaut si non défini
+        if (orderToSave.getOrderStatus() == null) {
+            orderToSave.setOrderStatus(OrderStatusEnum.CREATED);
+        }
+
+        // Type obligatoire
+        if (orderToSave.getOrderType() == null) {
+            throw new IllegalArgumentException("Le type de commande (EAT_IN ou TAKE_AWAY) est obligatoire");
         }
 
         try (Connection conn = new DBConnection().getConnection()) {
             conn.setAutoCommit(false);
 
-            // Vérification stock (TD4)
+            // Vérification stock (inchangée mais plus robuste)
             for (DishOrder doLine : orderToSave.getDishOrders()) {
                 Dish plat = findDishById(doLine.getIdDish());
                 if (plat == null) {
@@ -317,9 +332,6 @@ public class DataRetriever {
                 List<DishIngredient> ingredients = findDishIngredientsByDishId(doLine.getIdDish());
                 for (DishIngredient di : ingredients) {
                     Ingredient ing = di.getIngredient();
-                    if (ing.getStock() == null) {
-                        ing.setStock(0.0);
-                    }
                     double currentStock = ing.getStock() != null ? ing.getStock() : 0.0;
                     double needed = di.getQuantityRequired() * doLine.getQuantity();
 
@@ -333,24 +345,34 @@ public class DataRetriever {
                 }
             }
 
-            // Insertion commande
-            String insertOrderSql = """
-            INSERT INTO "order" (reference, total_ht, total_ttc)
-            VALUES (?, ?, ?)
+            // Insertion ou mise à jour (ON CONFLICT pour gérer les updates)
+            String upsertOrderSql = """
+            INSERT INTO "order" (reference, total_ht, total_ttc, order_type, order_status, customer_name)
+            VALUES (?, ?, ?, ?::order_type_enum, ?::order_status_enum, ?)
+            ON CONFLICT (reference) DO UPDATE SET
+                total_ht = EXCLUDED.total_ht,
+                total_ttc = EXCLUDED.total_ttc,
+                order_type = EXCLUDED.order_type,
+                order_status = EXCLUDED.order_status,
+                customer_name = EXCLUDED.customer_name
             RETURNING id
             """;
+
             int orderId;
-            try (PreparedStatement ps = conn.prepareStatement(insertOrderSql)) {
+            try (PreparedStatement ps = conn.prepareStatement(upsertOrderSql)) {
                 ps.setString(1, orderToSave.getReference());
                 ps.setDouble(2, orderToSave.getTotalHT());
                 ps.setDouble(3, orderToSave.getTotalTTC());
+                ps.setString(4, orderToSave.getOrderType().name());
+                ps.setString(5, orderToSave.getOrderStatus().name());
+                ps.setString(6, orderToSave.getCustomerName());
                 try (ResultSet rs = ps.executeQuery()) {
                     rs.next();
                     orderId = rs.getInt(1);
                 }
             }
 
-            // Insertion lignes
+            // Insertion des lignes (inchangée)
             String insertLineSql = """
             INSERT INTO dish_order (id_order, id_dish, quantity)
             VALUES (?, ?, ?)
@@ -367,12 +389,15 @@ public class DataRetriever {
 
             conn.commit();
 
-            // Retour de la commande sauvegardée
+            // Retour de l’objet mis à jour
             Order saved = new Order();
             saved.setId(orderId);
             saved.setReference(orderToSave.getReference());
             saved.setTotalHT(orderToSave.getTotalHT());
             saved.setTotalTTC(orderToSave.getTotalTTC());
+            saved.setOrderType(orderToSave.getOrderType());
+            saved.setOrderStatus(orderToSave.getOrderStatus());
+            saved.setCustomerName(orderToSave.getCustomerName());
             saved.setDishOrders(orderToSave.getDishOrders());
             return saved;
         } catch (SQLException e) {
@@ -384,7 +409,8 @@ public class DataRetriever {
     public Order findOrderByReference(String reference) {
         try (Connection conn = new DBConnection().getConnection()) {
             String sql = """
-            SELECT id, reference, creation_datetime, total_ht, total_ttc
+            SELECT id, reference, creation_datetime, total_ht, total_ttc, 
+                   order_type, order_status, customer_name
             FROM "order"
             WHERE reference = ?
             """;
@@ -398,8 +424,11 @@ public class DataRetriever {
                         order.setCreationDatetime(rs.getTimestamp("creation_datetime"));
                         order.setTotalHT(rs.getDouble("total_ht"));
                         order.setTotalTTC(rs.getDouble("total_ttc"));
+                        order.setOrderType(OrderTypeEnum.valueOf(rs.getString("order_type")));
+                        order.setOrderStatus(OrderStatusEnum.valueOf(rs.getString("order_status")));
+                        order.setCustomerName(rs.getString("customer_name"));
 
-                        // Charger les lignes DishOrder (alias changé : do → d_order)
+                        // Lignes (inchangé)
                         List<DishOrder> lines = new ArrayList<>();
                         String lineSql = """
                         SELECT d_order.id, d_order.id_order, d_order.id_dish, d_order.quantity, d.name

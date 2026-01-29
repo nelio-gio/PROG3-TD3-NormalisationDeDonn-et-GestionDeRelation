@@ -72,3 +72,18 @@ CREATE TABLE IF NOT EXISTS dish_order (
     );
 
 CREATE INDEX IF NOT EXISTS idx_dish_order_id_order ON dish_order(id_order);
+
+
+
+
+
+
+    --Schema pour la suite du TD (Evaluation)
+ALTER TABLE "order"
+    ADD COLUMN IF NOT EXISTS order_type VARCHAR(20) NOT NULL DEFAULT 'EAT_IN',
+    ADD COLUMN IF NOT EXISTS order_status VARCHAR(20) NOT NULL DEFAULT 'CREATED',
+    ADD COLUMN IF NOT EXISTS customer_name VARCHAR(255);
+
+-- Création des types enum (si pas déjà fait)
+CREATE TYPE order_type_enum AS ENUM ('EAT_IN', 'TAKE_AWAY');
+CREATE TYPE order_status_enum AS ENUM ('CREATED', 'READY', 'DELIVERED');
